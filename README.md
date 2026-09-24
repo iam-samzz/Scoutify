@@ -1,2 +1,2 @@
 # Scoutify
-A web application for discovering websites and extracting publicly available business contact information from search queries URL lists.
+A web application that discovers and extracts publicly available business contact information from websites.
