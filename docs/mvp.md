@@ -3,7 +3,7 @@
 ## What is scoutify? 
 Scoutify is a web application in which user's can scrap business contact information from online websites.
 
-## what is scoutify v1
+## What is scoutify v1
 Scoutify v1 is the 1st version of scoutify, in which user give list of one or more URLs  as Input,
 and scoutify will scrape the contact information from these sites and return the contact information.
 
@@ -22,7 +22,7 @@ Scoutify returns
 - Website URL
 - Social media links
 
-## export
+## Export
 Users can export their results as CSV file by making use of export option.
 
 ## Storage
