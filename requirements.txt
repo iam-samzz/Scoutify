@@ -1,0 +1,10 @@
+phonenumbers
+beautifulsoup4
+requests
+postal
+lxml
+
+instructor
+llama-cpp-python
+pydantic
+huggingface_hub
