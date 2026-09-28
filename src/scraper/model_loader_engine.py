@@ -3,12 +3,13 @@ import os
 from huggingface_hub import hf_hub_download
 import instructor
 
-_ai_client_instance = None
+ai_client = None
 
-def model_loader():
+def get_client_instance():
     """Initializes and returns a singleton Instructor client."""
-    global _ai_client_instance
-
+    global ai_client
+    if ai_client:
+        return ai_client
 
     current_folder = os.getcwd()
     parent_folder = os.path.dirname(current_folder)
@@ -31,7 +32,7 @@ def model_loader():
 
     #loading from hardrive to the RAM
     #small language model
-    slm = Llama(
+    raw_slm = Llama(
         model_path=model_path,
         n_threads=4,  # Limits CPU cores so the system stays smooth
         n_ctx=1024,  # Low context limit to conserve RAM (~1.2 GB)
@@ -41,7 +42,6 @@ def model_loader():
         verbose=False,
     )
 
-
     #now SLM object or model object is created
     # we need to merge it with instructor so that we get only the required fields.
     # and avoid the extra words and unwanted explanations.
@@ -50,9 +50,10 @@ def model_loader():
 
     '''https://python.useinstructor.com/concepts/patching/'''
     ai_client = instructor.patch(
-    create=slm.create_chat_completion,
+    create=raw_slm.create_chat_completion,
     mode=instructor.Mode.JSON_SCHEMA,)
 
+    #returns an ai client obj 
     return ai_client
 
 

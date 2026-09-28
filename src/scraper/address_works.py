@@ -1,4 +1,6 @@
 from postal.parser import parse_address 
+from address_schema import AddressInfo
+from model_loader_engine import get_client_instance
 
 def add_gmap_address(soup, current_address):
     # This directly finds <a> tags whose href attribute contains "google.com/maps"
@@ -7,14 +9,35 @@ def add_gmap_address(soup, current_address):
     for link in map_links:
         current_address.add(link)
 
-def add_address(soup,current_address):
-    addr1 = soup.find_all(class_=["address","addr","location"])
-    addr2 = soup.find_all("address")
+def get_ai_address(soup):
+    text = soup.get_text(" ",strip=True)
 
-    addresses = addr1 + addr2
-    for address in addresses:
-        current = parse_address(address.text)
+    client = get_client_instance()
 
+    response = client(
+        [
+            {
+                "role": "system",
+                "content": (
+                    "You are a precise data extraction assistant. "
+                    "Extract physical address details from web page text. "
+                    "Set has_address to False if no physical address is found."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Extract address from this text:\n\n{text}",
+            }
+        ],
+        response_model=AddressInfo,
+        max_tokens=256,
+    )
+
+    return response
+
+
+def add_address(current_address):
+    
 
 if __name__ == "__main__":
     
