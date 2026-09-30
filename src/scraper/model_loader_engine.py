@@ -34,12 +34,17 @@ def get_client_instance():
     #small language model
     raw_slm = Llama(
         model_path=model_path,
-        n_threads=4,  # Limits CPU cores so the system stays smooth
-        n_ctx=1024,  # Low context limit to conserve RAM (~1.2 GB)
-        n_batch=128,  # Minimizes peak memory spikes
-        n_gpu_layers=0,  # Runs on CPU (set -1 if GPU is available)
+        n_threads=os.cpu_count() - 1,
+        n_ctx=2048,
+        n_batch=512,
+        n_gpu_layers=-1,   # if you have a GPU; otherwise 0
         use_mmap=True,
         verbose=False,
+    )
+
+    ai_client = instructor.patch(
+        create=raw_slm.create_chat_completion_openai_v1,
+        mode=instructor.Mode.MD_JSON,
     )
 
     #now SLM object or model object is created
@@ -49,9 +54,15 @@ def get_client_instance():
     # Patching adds new features to LLM client objects without changing their original code. When Instructor patches a client, it adds:
 
     '''https://python.useinstructor.com/concepts/patching/'''
-    ai_client = instructor.patch(
+    '''ai_client = instructor.patch(
     create=raw_slm.create_chat_completion,
-    mode=instructor.Mode.JSON_SCHEMA,)
+    mode=instructor.Mode.MD_JSON,)
+
+    '''
+    '''ai_client = instructor.from_llama_cpp(
+    raw_slm,
+    mode=instructor.Mode.JSON_SCHEMA,
+)'''
 
     #returns an ai client obj 
     return ai_client

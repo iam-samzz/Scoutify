@@ -4,6 +4,7 @@ import requests
 
 from number_add import add_contact_from_footer,get_contact_url,add_contact_from_text
 from email_works import add_email_to_set
+from address_works import add_address,get_address_from_postal
 if __name__ == "__main__":
 
     urls = [
@@ -68,7 +69,10 @@ if __name__ == "__main__":
         for url in urls:
             current_phone_number = set()
             current_email = set()
-            current_address = set()
+
+            #here k is they key is the count of elements in the dict, and also used to find the next key
+            current_address = {"k":0}
+
             try:
                 response = requests.get(url,timeout=3)
                 site_html = response.text
@@ -80,6 +84,7 @@ if __name__ == "__main__":
                 #adding from the home page itself
                 add_contact_from_text(soup,current_phone_number)
                 add_email_to_set(soup,current_email)
+                add_address(soup,current_address)
 
                 #find contact us link
                 contact_url = get_contact_url(soup,url)
@@ -90,10 +95,14 @@ if __name__ == "__main__":
                     soup = BeautifulSoup(site_html,"lxml")  
                     add_contact_from_text(soup,current_phone_number)
                     add_email_to_set(soup,current_email)
+                    add_address(soup,current_address)
+                    #get_address_from_postal(soup)
+
                     
                 #getting email
                 print(current_phone_number)
                 print(current_email)
+                print(current_address)
             except TimeoutError:
                 print("timeout error!")
                 continue

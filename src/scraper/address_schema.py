@@ -32,7 +32,7 @@ class AddressInfo(BaseModel):
         description = "ZIP code or postal code"
     )
 
-    full_formated_address : Optional[str] = Field(
+    full_formatted_address : Optional[str] = Field(
         default = None,
         description= "Complete full formated address or single line address"
     )

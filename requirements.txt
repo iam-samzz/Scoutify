@@ -8,3 +8,4 @@ instructor
 llama-cpp-python
 pydantic
 huggingface_hub
+openai
