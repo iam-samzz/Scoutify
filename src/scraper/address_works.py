@@ -1,31 +1,34 @@
 from postal.parser import parse_address 
 from address_schema import AddressInfo
 from model_loader_engine import get_client_instance
+import time
 
 def add_gmap_address(soup, current_address):
     # This directly finds <a> tags whose href attribute contains "google.com/maps"
     map_links = soup.select('a[href*="google.com/maps"]')
     
-    
-    for link in map_links:
+    if map_links:
+        for link in map_links:
 
-        current_address["k"] += 1
-        current_address[current_address["k"]] = link.text
+            current_address["k"] += 1
+            current_address[current_address["k"]] = link.text
+        
         
 
 def get_ai_address(soup):
-    
-    for hidden_or_code in soup(["script", "style", "svg", "noscript", "iframe"]):
-        hidden_or_code.decompose()
-    # 2. Extract specific regions if you want to be precise:
-    main_content = soup.find("main") or soup.find("body") or soup
-    footer_content = soup.find("footer")
+    #
+    t0 = time.perf_counter()
 
-    main_text = main_content.get_text(separator="\n") if main_content else ""
-    footer_text = footer_content.get_text(separator="\n") if footer_content else ""
-    combined_text = f"--- PAGE CONTENT ---\n{main_text}\n\n--- FOOTER & CONTACT INFO ---\n{footer_text}"
-    
+    reduced_text = get_reduced_text(soup)
+
+    #
+    t1 = time.perf_counter()
+
+
     client = get_client_instance()
+
+    #
+    t2 = time.perf_counter()
 
     response = client(
         messages = [
@@ -38,17 +41,60 @@ def get_ai_address(soup):
             },
             {
                 "role": "user",
-                "content": f"Analyze this parsed web text and populate the response fields:\n\n{combined_text}",
+                "content": f"Analyze this parsed web text and populate the response fields:\n\n{reduced_text}",
             }
             
         ],
         response_model=AddressInfo,
-        max_tokens=512
+        max_tokens=512,
+        temperature = 0.0
         
     )
+    #
+    t3 = time.perf_counter()
+
+    print(f"[ai] prep text:  {t1 - t0:.2f}s", flush=True)
+    print(f"[ai] get client: {t2 - t1:.2f}s", flush=True)
+    print(f"[ai] llm call:   {t3 - t2:.2f}s", flush=True)
+    print(f"[ai] total:      {t3 - t0:.2f}s", flush=True)
 
     return response
 
+def get_reduced_text(soup):
+
+
+    JUNK = ["script", "style", "noscript", "svg", "iframe",
+        "nav", "header", "aside", "form", "button"]
+
+    for tag in soup(JUNK):
+        tag.decompose()
+
+    main_text = soup.find("main") or soup.find("body") or soup.body or soup
+    footer_text = soup.find("footer") or soup.find(id="main-footer") or soup.find("div",id = "footer") or soup.select_one("div[class*='footer']")
+
+    main_text = main_text.get_text("\n",strip = True)
+    if footer_text:
+        footer_text = footer_text.get_text("\n",strip = True)
+    else:
+        footer_text = ""
+    
+    combined_text = shrink(main_text+footer_text)
+    return combined_text
+
+#shrinking the text
+def shrink(text,limit = 6000):
+    line_list = []
+    
+    for line in text.splitlines():
+        if line:
+            line_list.append(line)
+    complete_text = "\n".join(line_list)
+    if len(complete_text) <= limit:
+        return complete_text
+    half = limit // 2
+    return complete_text[:half] + "\n...[cut]...\n" + complete_text[-half:]
+
+    
 
 def add_address(soup,current_address):
     #from the pydantic object( response ), we add it to the address set
@@ -69,7 +115,9 @@ def add_address(soup,current_address):
             address["full_formatted_address"] = response.full_formatted_address
 
         current_address["k"] += 1
-        current_address[current_address["k"]] = address       
+        current_address[current_address["k"]] = address
+
+        
         return True
     return False
 if __name__ == "__main__":

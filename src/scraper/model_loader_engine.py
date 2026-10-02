@@ -9,6 +9,7 @@ def get_client_instance():
     """Initializes and returns a singleton Instructor client."""
     global ai_client
     if ai_client:
+        print("[model] client already loaded", flush=True)
         return ai_client
 
     current_folder = os.getcwd()
@@ -21,32 +22,39 @@ def get_client_instance():
     #created Scoutify/models/
     os.makedirs(model_dir,exist_ok=True)
 
-
+    print("[model] checking model file...", flush=True)
     #downloading from the internet.
     model_path = hf_hub_download(
         repo_id="Qwen/Qwen2.5-1.5B-Instruct-GGUF",
         filename="qwen2.5-1.5b-instruct-q4_k_m.gguf",
         local_dir=model_dir,
     )
+    print("[model] model file ready", flush=True)
 
 
+
+    print("[model] loading model into RAM...", flush=True)
     #loading from hardrive to the RAM
     #small language model
     raw_slm = Llama(
         model_path=model_path,
         n_threads=os.cpu_count() - 1,
-        n_ctx=2048,
+        n_ctx=4096,
         n_batch=512,
         n_gpu_layers=-1,   # if you have a GPU; otherwise 0
         use_mmap=True,
         verbose=False,
     )
+    print("[model] model loaded into RAM!", flush=True)
 
+    print("[model] preparing instructor patched client...",flush=True)
+    print
     ai_client = instructor.patch(
         create=raw_slm.create_chat_completion_openai_v1,
-        mode=instructor.Mode.MD_JSON,
+        mode=instructor.Mode.JSON,
     )
 
+    print("[model] client is ready!")
     #now SLM object or model object is created
     # we need to merge it with instructor so that we get only the required fields.
     # and avoid the extra words and unwanted explanations.

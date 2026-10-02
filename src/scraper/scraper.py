@@ -2,9 +2,11 @@
 from bs4 import BeautifulSoup
 import requests
 
-from number_add import add_contact_from_footer,get_contact_url,add_contact_from_text
-from email_works import add_email_to_set
-from address_works import add_address,get_address_from_postal
+from contact import Contact
+
+
+
+
 if __name__ == "__main__":
 
     urls = [
@@ -61,6 +63,7 @@ if __name__ == "__main__":
 
     tot = len(urls)
     completed = 0
+    contact = Contact()
 
     with requests.Session() as session:
 
@@ -69,33 +72,47 @@ if __name__ == "__main__":
         for url in urls:
             current_phone_number = set()
             current_email = set()
-
+            site_title = None
             #here k is they key is the count of elements in the dict, and also used to find the next key
             current_address = {"k":0}
-
+            
             try:
                 response = requests.get(url,timeout=3)
                 site_html = response.text
                 soup = BeautifulSoup(site_html,"lxml")
+                site_title = soup.title
+
+
 
                 # add contact list from footer if available
                 #add_contact_from_footer(soup,current_phone_number)
 
                 #adding from the home page itself
-                add_contact_from_text(soup,current_phone_number)
-                add_email_to_set(soup,current_email)
-                add_address(soup,current_address)
+                print(f"[scraper] Starting phone number scraping for '{url}' ...")
+                contact.add_numbers_from_text(soup,current_phone_number)
+                print(f"[scraper] Fetched phone numbers!.")
+
+                print(f"[scraper] Starting email address scraping for '{url}' ... ")
+                contact.add_email_to_set(soup,current_email)
+                print(f"[scraper] Fetched email address!.")
+
+                print(f"[scraper] Starting address scraping for '{url}' ... ")
+                contact.add_address(soup,current_address)
+                print(f"[scraper] Fetched contact details!.")
 
                 #find contact us link
-                contact_url = get_contact_url(soup,url)
+                contact_url = contact.get_contact_url(soup,url)
                 if contact_url:
                     
                     response = requests.get(contact_url,timeout=3)
                     site_html = response.text
                     soup = BeautifulSoup(site_html,"lxml")  
-                    add_contact_from_text(soup,current_phone_number)
-                    add_email_to_set(soup,current_email)
-                    add_address(soup,current_address)
+                    contact.add_numbers_from_text(soup,current_phone_number)
+                    contact.add_email_to_set(soup,current_email)
+
+
+                    if len(current_address) <= 1:
+                        contact.add_address(soup,current_address)
                     #get_address_from_postal(soup)
 
                     
