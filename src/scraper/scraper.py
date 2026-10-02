@@ -22,7 +22,7 @@ class Scraper:
         self.contact = Contact()
         self.fetch_addresss_also = addr_status
     def scrape(self):
-
+        t0 = time.perf_counter()
         with requests.Session() as session:
 
             session.headers.update(self.custom_header)
@@ -35,7 +35,10 @@ class Scraper:
                 current_address = {"k":0}
                 
                 try:
+                    print(f"[requests] Sending GET to '{url}'...")
                     response = requests.get(url,timeout=3)
+                    print(f"[requests] Response Received from '{url}'.")
+
                     site_html = response.text
                     soup = BeautifulSoup(site_html,"lxml")
                     site_title = self.contact.get_title(soup)
@@ -61,8 +64,9 @@ class Scraper:
                     #find contact us link
                     contact_url = self.contact.get_contact_url(soup,url)
                     if contact_url:
-                        
+                        print(f"[requests] Sending GET to '{contact_url}'...")
                         response = requests.get(contact_url,timeout=3)
+                        print(f"Response received from '{contact_url}' ")
                         site_html = response.text
                         soup = BeautifulSoup(site_html,"lxml")  
 
@@ -76,22 +80,28 @@ class Scraper:
 
                         
                     #getting email
+                    print(f"-----------------'{url}' contact details------------------")
                     print(current_phone_number)
                     print(current_email)
                     print(current_address)
                     print(site_title)
+                    print(f"-----------------over-------------------------------------")
                 except TimeoutError:
                     print("timeout error!")
                     continue
                 except requests.exceptions.ConnectionError:
                     print("connection error")
+                    continue
                 except requests.exceptions.ReadTimeout:
-                    print("read timeout")
+                    print("READ TIMEOUT")
+                    continue
                 if current_phone_number:
                     self.completed += 1
             print()
             print(f"Out of {self.total_urls} , {self.completed} is completed.")
 
+            t1 = time.perf_counter()
+            print(f"Time taken for scraping: {(t1 - t0):.5f}s")
 
 if __name__ == "__main__":
 
@@ -138,5 +148,8 @@ if __name__ == "__main__":
     "https://okhai.org"
     ]
 
-    scraper = Scraper(urls)
+    scraper = Scraper([
+    "https://mahifashions.in",
+    "https://www.beelittle.in",
+    "https://manjuboutique.in"])
     scraper.scrape()
