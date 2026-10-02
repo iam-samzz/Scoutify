@@ -35,8 +35,13 @@ def get_ai_address(soup):
             {
                 "role": "system",
                 "content": (
-                    "You are a strict data extraction engine. Your job is to output structured data matching the schema rules. "
-                    "If you cannot locate any physical address strings anywhere on the page, verify that your data fields handle defaults."
+                    "You are a strict address extraction engine. "
+                    "Extract ONLY addresses that appear word-for-word in the text. "
+                    "Do NOT invent, guess, or generate placeholder addresses like "
+                    "'123 Main Street' or 'Anytown'. "
+                    "If the text does not contain a real physical address, "
+                    "set has_address=False and leave all fields null. "
+                    "When in doubt, say has_address=False."
                 ),
             },
             {
@@ -46,7 +51,7 @@ def get_ai_address(soup):
             
         ],
         response_model=AddressInfo,
-        max_tokens=512,
+        max_tokens=200,
         temperature = 0.0
         
     )
@@ -78,7 +83,7 @@ def get_reduced_text(soup):
     else:
         footer_text = ""
     
-    combined_text = shrink(main_text+footer_text)
+    combined_text = shrink(main_text+footer_text,3000)
     return combined_text
 
 #shrinking the text

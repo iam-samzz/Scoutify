@@ -29,6 +29,7 @@ def get_client_instance():
         filename="qwen2.5-1.5b-instruct-q4_k_m.gguf",
         local_dir=model_dir,
     )
+
     print("[model] model file ready", flush=True)
 
 
@@ -48,7 +49,7 @@ def get_client_instance():
     print("[model] model loaded into RAM!", flush=True)
 
     print("[model] preparing instructor patched client...",flush=True)
-    print
+    
     ai_client = instructor.patch(
         create=raw_slm.create_chat_completion_openai_v1,
         mode=instructor.Mode.JSON,
