@@ -8,7 +8,7 @@ from url_details import UrlDetails
 
 class Scraper:
 
-    def __init__(self,urls,addr_status=False):
+    def __init__(self,urls:list,addr_status=False):
         self.urls = urls
         self.total_urls = len(urls)
 
@@ -33,7 +33,7 @@ class Scraper:
 
         self.scrape_information = {}
 
-    def scrape(self):
+    def scrape(self) -> dict:
         t0 = time.perf_counter()
 
         complete_status1 = False #its completion status for phone number
@@ -47,7 +47,7 @@ class Scraper:
             session.headers.update(self.custom_header)
             
             for url in self.urls:
-
+                url_detail = UrlDetails(url)
                 current_phone_number = set()
                 current_email = set()
                 site_title = None
@@ -104,7 +104,7 @@ class Scraper:
                         print(f"[scraper] Fetched contact details!.")
 
                     
-                    #getting email
+                    #printing details
                     print(f"-----------------'{url}' contact details------------------")
                     print(current_phone_number)
                     print(current_email)
@@ -112,22 +112,30 @@ class Scraper:
                     print(site_title)
                     print(f"-----------------over-------------------------------------")
 
-                    #adding details to url detaiil object
+                    #instanciating url_detail object
+                    url_detail.email = current_email
+                    url_detail.phone_number = current_phone_number
+                    url_detail.title = site_title
                     if self.fetch_addresss_also:
-                        url_detail = UrlDetails(url,site_title,current_phone_number,current_email,current_address)
-                    else:
-                        url_detail = UrlDetails(url,site_title,current_phone_number,current_email)
+                        url_detail.address = current_address
 
                     self.result[url] = url_detail
                     
-                except TimeoutError:
-                    print("timeout error!")
-                    continue
-                except requests.exceptions.ConnectionError:
+
+                except requests.exceptions.ConnectionError as e:
                     print("connection error")
+                    url_detail.request_status = False
+                    url_detail.error_log.append("Requests ConnectionError.")
                     continue
-                except requests.exceptions.ReadTimeout:
+                except requests.exceptions.ReadTimeout as e:
                     print("READ TIMEOUT")
+                    url_detail.request_status = False
+                    url_detail.error_log.append("Requests ReadTimeout Exception.")
+                    continue
+                except requests.exceptions.Timeout:
+                    print("Requests time out")
+                    url_detail.request_status = False
+                    url_detail.error_log.append("Requests Timeout Exception.")
                     continue
                 if current_phone_number:
                     complete_status1 = True
@@ -138,8 +146,13 @@ class Scraper:
                 if len(current_address) > 1:
                     complete_status3 = True
                     self.physical_address_completed += 1
-                if complete_status1 and complete_status2 and complete_status3:
-                    self.fully_completed += 1
+
+                if self.fetch_addresss_also:
+                    if complete_status1 and complete_status2 and complete_status3:
+                        self.fully_completed += 1
+                else:
+                    if complete_status1 and complete_status2:
+                        self.fully_completed += 1
             
             print(f"Out of {self.total_urls} , {self.fully_completed} urls are fully completed.")
             print(f"{self.phone_number_completed} Phone numbers completed out of {self.total_urls} url's")
@@ -159,23 +172,24 @@ class Scraper:
 
         return self.result
     
-    def get(self,url:str)-> UrlDetails | None:
+    def get_detail_from_url(self,url:str)-> UrlDetails | None:
         details_obj = self.result.get(url)
         return details_obj
-    def get_all_email(self):
+    
+    def get_all_email(self)->dict:
         all_email = {}
         for url_key in self.result:
             detail_obj = self.result[url_key]
             all_email[url_key] = detail_obj.email
         return all_email
-    def get_all_phone_number(self):
+    def get_all_phone_number(self)-> dict:
         all_phone_number = {}
         for url_key in self.result:
             detail_obj = self.result[url_key]
             all_phone_number[url_key] = detail_obj.phone_number
         return all_phone_number
     
-    def get_all_title(self):
+    def get_all_title(self)->dict:
         all_title = {}
         for url_key in self.result:
             detail_obj = self.result[url_key]
@@ -227,13 +241,12 @@ if __name__ == "__main__":
     "https://okhai.org"
     ]
 
-    scraper = Scraper([
-    "https://mahifashions.in",
-    "https://www.beelittle.in",
-    "https://manjuboutique.in"])
+    scraper = Scraper(urls)
 
 
     result = scraper.scrape()
-    detail = scraper.get('https://pinkfort.com')
-
-    print(detail.email)
+    detail = scraper.get_detail_from_url('https://pinkfort.com')
+    if detail:
+        print(detail.email)
+    else:
+        print(None)
