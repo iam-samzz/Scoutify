@@ -5,7 +5,103 @@
         <meta charset="utf-8">
         <meta name="description" content="Scoutify - Business Contact Scraper App">
         <style>
-            .hidden { display: none; }
+            .hidden { display: none !important; }
+
+            body {
+            background-color: #0d1117;   
+            color:	#e6edf3;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            
+            }
+
+            .btn{
+                padding-top: 8px;
+                padding-bottom:8px;
+                background-color: #0d1117;
+
+                border:#e6edf3 solid 2px;
+                border-radius: 18px;
+
+                color :#e6edf3;
+
+                padding-left: 19px;
+                padding-right:19px;
+                display: inline;
+                font-size: 15px;
+                 
+            }
+            .btn:hover{
+                background-color:#e6edf3;
+                color:#0d1117;
+                cursor: pointer;
+            }
+            
+            .btn2{
+                padding-top: 8px;
+                padding-bottom:8px;
+                padding-left: 15px;
+                padding-right:15px;
+                display: inline;
+
+                background-color: #0d1117;
+
+                border:#e6edf3 solid 2px;
+                border-radius: 18px;
+
+                color :#e6edf3;
+
+                font-size: 15px;
+
+            }
+            .btn2:hover{
+                background-color:#e6edf3;
+                color:#0d1117;
+                cursor: pointer;
+            }
+            #form-filling-container{
+                margin-top: 15px;
+                border-color: rgb(69, 52, 224);
+                /*background-color: aqua;*/
+                   /* Limits how wide the container can get */
+                margin: 15px auto 0 auto; /* Centers the container horizontally (keeps 15px top margin) */
+                
+            }
+            .urlContainerClass {
+                display: inline-block;
+                border: 2px solid #e6edf3;
+                margin: 5px;
+                
+                border-radius: 8px;
+                width: 110px;         /* Use a fixed width to keep them uniform */
+                height: 115px;        /* Height increased slightly to fit both text and button safely */
+                padding: 8px 4px;     /* Small inner spacing */
+                box-sizing: border-box; 
+                vertical-align: top;  /* Keeps the boxes aligned cleanly at the top of each row */
+                overflow: hidden;    /* Keeps contents from leaking outside the borders */
+                
+            }
+            .urlContainerClass p {
+                font-size: 15px;
+                margin: 0 0 6px 0;
+                line-height: 1.2;
+                word-break: break-all;     /* Forces long URLs to split across lines */
+                overflow-wrap: break-word; /* Back-up break rule for modern browsers */
+                height: 52px;              /* Gives text a fixed area so button stays aligned */
+                overflow: hidden;          /* Prevents extreme lengths from expanding box */
+            }
+            #added-urls{
+                margin-top: 15px;
+            }
+
+            .activeFormButton{
+                background-color: #e6edf3;
+                color: #0d1117;
+            }
+
         </style>
     </head>
     <body>
@@ -16,29 +112,36 @@
                 <form action="#" method="post" id="url-form">
                     
                     <div id="url-options">
-                        <button type="button" id="manual-url-option">Manual</button>
-                        <button type="button" id="url-file-option">Upload</button>
+                        <button class="btn" type="button" id="manual-url-option">Manual</button>
+                        <button class="btn" type="button" id="url-file-option">Upload</button>
                     </div>
 
-                    <div id="add-urls">
-                        <label for="url">Url:</label>
-                        <input id="url" type="text" name="url">
-                        <button type="button" id="add-url">Add</button>
-                    </div>
-                    
-                    <div id="add-urls-file" class="hidden">
-                        <label for="url-file">Upload Your CSV:</label>
-                        <input type="file" id="url-file" name="url-file" accept=".csv, .xls, .xlsx">
-                    </div>
+                    <div id="form-filling-container">
+                        <div id="add-urls">
+                            <label for="url">Url:</label>
+                            <input id="url" type="text" name="url">
+                            <button class="btn" type="button" id="add-url">Add</button>
+                        </div>
+                        
+                        <div id="add-urls-file" class="hidden">
+                            <label for="url-file">Upload Your CSV:</label>
+                            <input class = "btn2" type="file" id="url-file" name="url-file" accept=".csv, .xls, .xlsx">
+                        </div>
 
-                    <div id="added-urls">
+                        <button class="btn" type="submit" id="submit-btn" class="hidden">
+                            Generate
+                        </button>
+                        
+                        <button type="button" class="btn" id="clear-all-url" acti>
+                            Clear
+                        </button>
+
+                        <div id="added-urls">
+
+                        </div>
+
 
                     </div>
-
-                    <button type="submit" id="submit-btn" class="hidden">
-                        Submit
-                    </button>
-                    
                 </form>
             </section>
         </main>
@@ -49,16 +152,20 @@
             const urlMap = new Map();
             let urlCount = 0; // Fixed: const cannot be incremented
             const submitForm = document.getElementById("submit-btn");
-            
+            submitForm.classList.add("hidden")
             let formStatus = "manual";
             const urlFileOption = document.getElementById("url-file-option");
             const urlManualOption = document.getElementById("manual-url-option");
+            urlManualOption.classList.add("activeFormButton")
 
             const urlFileContainer = document.getElementById("add-urls-file");
             const urlManualContainer = document.getElementById("add-urls");
 
             const displayUrl = document.getElementById("added-urls")
             
+            const clearAllUrl = document.getElementById("clear-all-url")
+            clearAllUrl.classList.add("hidden")
+
             function addUrlToMap()
             {
                 const inputUrl = inputValue.value.trim();
@@ -70,15 +177,19 @@
 
                         if (urlCount > 0) {
                             submitForm.classList.remove("hidden");
+                            clearAllUrl.classList.remove("hidden")
                         }
                         inputValue.value = "";// Clear input field after adding
                         
                         const urlContainer = document.createElement('div')
-                        
+
+
+                        urlContainer.classList.add("urlContainerClass")
                         const newUrlText = document.createElement('p')
                         const removeButton = document.createElement('button')
                         removeButton.id = "remove_url_" + String(urlCount)
                         removeButton.textContent = "Remove"
+                        removeButton.classList.add("btn2")
                         newUrlText.textContent = inputUrl
         
                         displayUrl.appendChild(urlContainer)
@@ -110,6 +221,11 @@
                     formStatus = "file";
                     urlFileContainer.classList.remove("hidden");
                     urlManualContainer.classList.add("hidden");
+
+                    urlManualOption.classList.remove("activeFormButton")
+                    urlFileOption.classList.add("activeFormButton")
+
+
                 }
             });
 
@@ -118,8 +234,24 @@
                     formStatus = "manual";
                     urlFileContainer.classList.add("hidden");
                     urlManualContainer.classList.remove("hidden");
+
+                    urlManualOption.classList.add("activeFormButton")
+                    urlFileOption.classList.remove("activeFormButton")
                 }
             });
+
+            clearAllUrl.addEventListener('click', (event)=>{
+                event.preventDefault()
+                displayUrl.replaceChildren()
+                urlMap.clear()
+                clearAllUrl.classList.add("hidden")
+                submitForm.classList.add("hidden")
+
+
+            })
+
+
+
         </script>
     </body>
 </html>
