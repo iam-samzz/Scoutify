@@ -1,5 +1,5 @@
 from flask import Flask
-from src.views.dashbaord_route import home_bp
+from src.blueprints.dashbaord_route import home_bp
 app = Flask(__name__)
 
 app.register_blueprint(home_bp)

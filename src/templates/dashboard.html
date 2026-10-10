@@ -43,6 +43,8 @@
             </section>
         </main>
         <script>
+            const inputValue = document.getElementById("url");
+
             const urlAddButton = document.getElementById("add-url");
             const urlMap = new Map();
             let urlCount = 0; // Fixed: const cannot be incremented
@@ -56,10 +58,9 @@
             const urlManualContainer = document.getElementById("add-urls");
 
             const displayUrl = document.getElementById("added-urls")
-
-
-            urlAddButton.addEventListener('click', () => { 
-                const inputValue = document.getElementById("url");
+            
+            function addUrlToMap()
+            {
                 const inputUrl = inputValue.value.trim();
 
                 if (inputUrl) {
@@ -71,15 +72,38 @@
                             submitForm.classList.remove("hidden");
                         }
                         inputValue.value = "";// Clear input field after adding
-
+                        
+                        const urlContainer = document.createElement('div')
+                        
                         const newUrlText = document.createElement('p')
+                        const removeButton = document.createElement('button')
+                        removeButton.id = "remove_url_" + String(urlCount)
+                        removeButton.textContent = "Remove"
                         newUrlText.textContent = inputUrl
+        
+                        displayUrl.appendChild(urlContainer)
+                        urlContainer.appendChild(newUrlText)
+                        urlContainer.appendChild(removeButton)
 
-                        displayUrl.appendChild(newUrlText)
+                        removeButton.addEventListener('click',()=>{
+                            urlMap.delete(inputUrl)
+                            urlCount -= 1
+                            urlContainer.remove()
 
+                        })
+                        
                     }
                 }
-            });
+            }
+            
+            inputValue.addEventListener("keydown", (e)=>{
+                if (e.key == "Enter"){
+                    e.preventDefault()
+                    addUrlToMap()
+                }
+            })
+            
+            urlAddButton.addEventListener('click', addUrlToMap);
             
             urlFileOption.addEventListener('click', () => {
                 if (formStatus === "manual") {

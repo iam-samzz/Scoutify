@@ -5,4 +5,4 @@ home_bp = Blueprint("home",__name__)
 
 @home_bp.route("/")
 def dashboard():
-    return ""
+    return render_template("dashboard.html")
