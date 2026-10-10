@@ -86,6 +86,7 @@ class Scraper:
                                         self.contact.add_address(contact_page_soup,current_address)
                         except requests.exceptions.Timeout:
                             print(f"Timeout error while trying to contact {contact_url}..")
+                            url_detail.error_log.append(f'Timeout error while trying to contact {contact_url}..')
 
                     if not current_phone_number:
                         print(f"[scraper] Starting phone number scraping for '{url}' ...")

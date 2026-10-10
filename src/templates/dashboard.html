@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
+        <meta name="description" content="Scoutify - Business Contact Scraper App">
+        <style>
+            .hidden { display: none; }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Scoutify</h1>
+            <h2>Give URLs as Input</h2>
+            <section>
+                <form action="#" method="post" id="url-form">
+                    
+                    <div id="url-options">
+                        <button type="button" id="manual-url-option">Manual</button>
+                        <button type="button" id="url-file-option">Upload</button>
+                    </div>
+
+                    <div id="add-urls">
+                        <label for="url">Url:</label>
+                        <input id="url" type="text" name="url">
+                        <button type="button" id="add-url">Add</button>
+                    </div>
+                    
+                    <div id="add-urls-file" class="hidden">
+                        <label for="url-file">Upload Your CSV:</label>
+                        <input type="file" id="url-file" name="url-file" accept=".csv, .xls, .xlsx">
+                    </div>
+
+                    <div id="added-urls">
+
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="hidden">
+                        Submit
+                    </button>
+                    
+                </form>
+            </section>
+        </main>
+        <script>
+            const urlAddButton = document.getElementById("add-url");
+            const urlMap = new Map();
+            let urlCount = 0; // Fixed: const cannot be incremented
+            const submitForm = document.getElementById("submit-btn");
+            
+            let formStatus = "manual";
+            const urlFileOption = document.getElementById("url-file-option");
+            const urlManualOption = document.getElementById("manual-url-option");
+
+            const urlFileContainer = document.getElementById("add-urls-file");
+            const urlManualContainer = document.getElementById("add-urls");
+
+            const displayUrl = document.getElementById("added-urls")
+
+
+            urlAddButton.addEventListener('click', () => { 
+                const inputValue = document.getElementById("url");
+                const inputUrl = inputValue.value.trim();
+
+                if (inputUrl) {
+                    if (!urlMap.has(inputUrl)) {
+                        urlCount += 1;
+                        urlMap.set(inputUrl, urlCount);
+
+                        if (urlCount > 0) {
+                            submitForm.classList.remove("hidden");
+                        }
+                        inputValue.value = "";// Clear input field after adding
+
+                        const newUrlText = document.createElement('p')
+                        newUrlText.textContent = inputUrl
+
+                        displayUrl.appendChild(newUrlText)
+
+                    }
+                }
+            });
+            
+            urlFileOption.addEventListener('click', () => {
+                if (formStatus === "manual") {
+                    formStatus = "file";
+                    urlFileContainer.classList.remove("hidden");
+                    urlManualContainer.classList.add("hidden");
+                }
+            });
+
+            urlManualOption.addEventListener('click', () => {
+                if (formStatus === "file") {
+                    formStatus = "manual";
+                    urlFileContainer.classList.add("hidden");
+                    urlManualContainer.classList.remove("hidden");
+                }
+            });
+        </script>
+    </body>
+</html>

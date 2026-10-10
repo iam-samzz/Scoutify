@@ -6,8 +6,10 @@ class UrlDetails:
         self.phone_number = phone_number
         self.email = email
         self.address = address
+
         self.request_status = True #True => Successful, False -> Not Successful
         self.error_log = []
 
+        
 
         
