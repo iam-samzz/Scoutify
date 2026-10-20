@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
+        <meta name="description" content="Scoutify - Loading">
+        <title>Scoutify - Loading</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                background-color: #0d1117;
+                color: #e6edf3;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 24px 14px;
+                min-height: 100vh;
+
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+                text-align: center;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            }
+
+            .brand {
+                margin: 0 0 6px 0;
+                font-size: 13px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #8b949e;
+            }
+
+            h1 {
+                margin: 0 0 8px 0;
+                font-size: 24px;
+                font-weight: 600;
+            }
+
+            .loader-wrap {
+                margin: 28px auto;
+                padding: 14px;
+                border-radius: 50%;
+                display: inline-block;
+            }
+
+            .loader {
+                width: 58px;
+                height: 58px;
+                border: 4px solid #30363d;
+                border-top-color: #e6edf3;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
+            .loading-text {
+                margin: 0;
+                font-size: 16px;
+            }
+
+            .loading-text .dots::after {
+                content: "";
+                display: inline-block;
+                width: 1.2em;
+                text-align: left;
+                animation: dots 1.4s steps(4, end) infinite;
+            }
+
+            @keyframes dots {
+                0%   { content: ""; }
+                25%  { content: "."; }
+                50%  { content: ".."; }
+                75%  { content: "..."; }
+                100% { content: ""; }
+            }
+
+            .subtext {
+                margin: 10px 0 0 0;
+                font-size: 13px;
+                line-height: 1.5;
+                color: #8b949e;
+            }
+
+            .error-message {
+                color: #ff7b72;
+            }
+
+            .elapsed {
+                margin: 22px 0 0 0;
+                font-size: 13px;
+                color: #8b949e;
+            }
+
+            .simple-glow {
+                /* Syntax: horizontal vertical blur spread color */
+                box-shadow: 1px 1px 10px 1px #586578;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .loader {
+                    animation-duration: 2.5s;
+                }
+                .loading-text .dots::after {
+                    animation: none;
+                    content: "...";
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <p class="brand">Scoutify</p>
+            <h1>Scraping in progress</h1>
+
+            <div class="loader-wrap simple-glow">
+                <div class="loader" role="status" aria-label="Loading"></div>
+            </div>
+
+            <p class="loading-text" aria-live="polite">
+                Contacting the engine<span class="dots"></span>
+            </p>
+
+            <p class="subtext">
+                Large lists of URLs can take a while.
+                Please keep this tab open.
+            </p>
+
+            <p class="elapsed" id="elapsed">Elapsed: 0s</p>
+
+            <p class="subtext error-message" id="error-message" role="alert" hidden></p>
+        </main>
+
+        <script>
+            const jobId = {{ job_id|tojson }};
+            
+            const errorMessage = document.getElementById("error-message");
+            let counterInterval;
+
+            (function () {
+                const start = Date.now();
+                const elapsedEl = document.getElementById("elapsed");
+
+                setInterval(function () {
+                    const seconds = Math.floor((Date.now() - start) / 1000);
+                    elapsedEl.textContent = "Elapsed: " + seconds + "s";
+                }, 1000);
+            })();
+
+            function showError(message) {
+                clearInterval(counterInterval);
+                errorMessage.textContent = message;
+                errorMessage.hidden = false;
+            }
+
+            counterInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(
+                        `/job-status/${encodeURIComponent(jobId)}`
+                    );
+
+                    if (!response.ok) {
+                        showError(`Could not check scraping status (HTTP ${response.status}).`);
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status === "COMPLETED") {
+                        clearInterval(counterInterval);
+                        window.location.href = `/results/${encodeURIComponent(jobId)}`;
+                    } else if (data.status === "FAILED") {
+                        showError(data.error || "Scraping failed. Please try again.");
+                    }
+                }
+                catch (error) {
+                    console.error(error);
+                    showError("A network error prevented checking the scraping status.");
+                }
+            }, 1500);
+        </script>
+    </body>
+</html>

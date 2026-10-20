@@ -1,11 +1,11 @@
-from number_works import get_contact_url,add_numbers_from_text
-from email_works import add_email_to_set
-from address_works import add_address,add_gmap_address
+from src.scraper.number_works import get_contact_url,add_numbers_from_text
+from src.scraper.email_works import add_email_to_set
+from src.scraper.address_works import add_address,add_gmap_address
 from bs4 import BeautifulSoup
 
 class Contact:
     def get_title(self,soup):
-        return soup.title
+        return soup.title.get_text(strip=True) if soup.title else None
     
     def get_contact_url(self,soup:BeautifulSoup,base_url:str) -> str:
         return get_contact_url(soup,base_url)

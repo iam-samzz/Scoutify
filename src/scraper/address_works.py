@@ -1,6 +1,6 @@
-from postal.parser import parse_address 
-from address_schema import AddressInfo
-from model_loader_engine import get_client_instance
+#from postal.parser import parse_address 
+from src.scraper.address_schema import AddressInfo
+from src.scraper.model_loader_engine import get_client_instance
 import time
 
 def add_gmap_address(soup, current_address):

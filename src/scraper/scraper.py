@@ -3,12 +3,12 @@ from bs4 import BeautifulSoup
 import requests
 import time
 
-from contact import Contact
-from url_details import UrlDetails
+from src.scraper.contact import Contact
+from src.scraper.url_details import UrlDetails
 
 class Scraper:
 
-    def __init__(self,urls:list,addr_status=False):
+    def __init__(self,urls:list,addr_status=True):
         self.urls = urls
         self.total_urls = len(urls)
 
@@ -93,7 +93,7 @@ class Scraper:
                         self.contact.add_numbers_from_text(home_soup,current_phone_number)
                         print(f"[scraper] Fetched phone numbers!.")
 
-                    if not current_address:
+                    if not current_email:
                         print(f"[scraper] Starting email address scraping for '{url}' ... ")
                         self.contact.add_email_to_set(home_soup,current_email)
                         print(f"[scraper] Fetched email address!.")
@@ -117,6 +117,8 @@ class Scraper:
                     url_detail.email = current_email
                     url_detail.phone_number = current_phone_number
                     url_detail.title = site_title
+                    url_detail.url = url
+
                     if self.fetch_addresss_also:
                         url_detail.address = current_address
 

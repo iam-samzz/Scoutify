@@ -1,7 +1,7 @@
 phonenumbers
 beautifulsoup4
 requests
-postal
+# postal
 lxml
 
 instructor
@@ -10,3 +10,4 @@ pydantic
 huggingface_hub
 openai
 validators
+flask

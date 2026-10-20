@@ -153,14 +153,12 @@
                         </div>
                         
                         <div id="add-urls-file" class="hidden">
-                            <label for="url-file">Upload CSV</label>
-                            <input class = "btn2" type="file" id="url-file" name="url-file" accept=".csv, .xls, .xlsx">
+                            <label for="url-file">Upload CSV (column: urls)</label>
+                            <input class = "btn2" type="file" id="url-file" name="url-file" accept=".csv,text/csv">
                         </div>
 
                         <div id="click-options">
-                            <button class="btn simple-glow" type="submit" id="submit-btn" class="hidden">
-                                Generate
-                            </button>
+                            <button class="btn simple-glow hidden" type="submit" id="submit-btn">Generate</button>
                             
                             <button type="button" class="btn" id="clear-all-url" acti>
                                 Clear
@@ -177,111 +175,122 @@
         </main>
         <script>
             const inputValue = document.getElementById("url");
-            const fileValue = document.getElementById("url-file")
-
+            const fileValue = document.getElementById("url-file");
             const urlAddButton = document.getElementById("add-url");
             const urlMap = new Map();
-            let urlCount = 0; // Fixed: const cannot be incremented
             const submitForm = document.getElementById("submit-btn");
-            submitForm.classList.add("hidden")
-            let formStatus = "manual";
             const urlFileOption = document.getElementById("url-file-option");
             const urlManualOption = document.getElementById("manual-url-option");
-            urlManualOption.classList.add("activeFormButton")
-
             const urlFileContainer = document.getElementById("add-urls-file");
             const urlManualContainer = document.getElementById("add-urls");
+            const displayUrl = document.getElementById("added-urls");
+            const clearAllUrl = document.getElementById("clear-all-url");
+            const urlForm = document.getElementById('url-form');
 
-            const displayUrl = document.getElementById("added-urls")
-            
-            const clearAllUrl = document.getElementById("clear-all-url")
-            clearAllUrl.classList.add("hidden")
+            let formStatus = "manual";
+            let urlCount = 0;
 
-            function addUrlToMap()
-            {
+            // Initialize UI states
+            submitForm.classList.add("hidden");
+            clearAllUrl.classList.add("hidden");
+            urlManualOption.classList.add("activeFormButton");
 
+            function normalizeUrl(url) {
+                if (!/^https?:\/\//i.test(url)) {
+                    url = "https://" + url;
+                }
+                try {
+                    const parsedUrl = new URL(url);
+                    if (!["http:", "https:"].includes(parsedUrl.protocol)) return null;
+                    if (!parsedUrl.hostname.includes(".") || parsedUrl.hostname.startsWith(".") || parsedUrl.hostname.endsWith(".")) return null;
+                    return parsedUrl.href;
+                } catch {
+                    return null;
+                }
+            }
+
+            function addUrlToMap() {
                 const inputUrl = inputValue.value.trim();
                 if (!inputValue.checkValidity()) {
-                    inputValue.reportValidity(); // Shows the browser's "Please match the format" popup
-                    return;                      // Stops the function from adding it to the box!
+                    inputValue.reportValidity();
+                    return;
                 }
-
                 if (inputUrl) {
-                    if(!inputUrl){
-                        alert("Please enter a URL")
-                        return
+                    const normalizedUrl = normalizeUrl(inputUrl);
+                    if (!normalizedUrl) {
+                        alert("Please enter a valid URL.");
+                        inputValue.value = "";
+                        return;
                     }
-
-                    if (!validateUrl(inputUrl)){
-                        alert("Please enter a valid URL.")
-                        inputValue.value = ""
-                        return
-                    }
-                    if (!urlMap.has(inputUrl)) {
+                    if (!urlMap.has(normalizedUrl)) {
                         urlCount += 1;
-                        urlMap.set(inputUrl, urlCount);
+                        urlMap.set(normalizedUrl, urlCount);
 
                         if (urlCount > 0) {
                             submitForm.classList.remove("hidden");
-                            clearAllUrl.classList.remove("hidden")
+                            clearAllUrl.classList.remove("hidden");
                         }
-                        inputValue.value = "";// Clear input field after adding
+                        inputValue.value = "";
                         
-                        const urlContainer = document.createElement('div')
-
-
-                        urlContainer.classList.add("urlContainerClass")
-                        const newUrlText = document.createElement('p')
-                        const removeButton = document.createElement('button')
-                        removeButton.id = "remove_url_" + String(urlCount)
-                        removeButton.textContent = "Remove"
-                        removeButton.classList.add("btn2")
-                        newUrlText.textContent = inputUrl
-        
-                        displayUrl.appendChild(urlContainer)
-                        urlContainer.appendChild(newUrlText)
-                        urlContainer.appendChild(removeButton)
-
-                        removeButton.addEventListener('click',()=>{
-                            urlMap.delete(inputUrl)
-                            urlCount -= 1
-                            urlContainer.remove()
-
-                        })
+                        const urlContainer = document.createElement('div');
+                        urlContainer.classList.add("urlContainerClass");
+                        const newUrlText = document.createElement('p');
+                        const removeButton = document.createElement('button');
                         
-                    }
-                    else{
-                        inputValue.value = ""
+                        removeButton.textContent = "Remove";
+                        removeButton.classList.add("btn2");
+                        newUrlText.textContent = normalizedUrl;
+
+                        displayUrl.appendChild(urlContainer);
+                        urlContainer.appendChild(newUrlText);
+                        urlContainer.appendChild(removeButton);
+
+                        removeButton.addEventListener('click', () => {
+                            urlMap.delete(normalizedUrl);
+                            urlCount -= 1;
+                            urlContainer.remove();
+                            
+                            // Hide buttons if empty again
+                            if (urlMap.size === 0) {
+                                submitForm.classList.add("hidden");
+                                clearAllUrl.classList.add("hidden");
+                            }
+                        });
+                    } else {
+                        inputValue.value = "";
                     }
                 }
-                
             }
-            
-            inputValue.addEventListener("keydown", (e)=>{
-                if (e.key == "Enter"){
-                    e.preventDefault()
-                    addUrlToMap()
+
+            inputValue.addEventListener("keydown", (e) => {
+                if (e.key == "Enter") {
+                    e.preventDefault();
+                    addUrlToMap();
                 }
-            })
-            
+            });
+
             urlAddButton.addEventListener('click', addUrlToMap);
-            
+
+            fileValue.addEventListener('change', () => {
+                const hasFile = fileValue.files.length > 0;
+                submitForm.classList.toggle("hidden", !hasFile);
+                clearAllUrl.classList.toggle("hidden", !hasFile);
+            });
+
             urlFileOption.addEventListener('click', () => {
                 if (formStatus === "manual") {
                     formStatus = "file";
                     urlFileContainer.classList.remove("hidden");
                     urlManualContainer.classList.add("hidden");
-
                     urlManualOption.classList.remove("activeFormButton");
                     urlFileOption.classList.add("activeFormButton");
-                    
                     displayUrl.classList.add("hidden");
                     displayUrl.replaceChildren();
                     urlMap.clear();
-
-                    clearAllUrl.classList.remove("hidden")
-
-
+                    urlCount = 0;
+                    fileValue.value = "";
+                    submitForm.classList.add("hidden");
+                    clearAllUrl.classList.remove("hidden");
                 }
             });
 
@@ -290,65 +299,177 @@
                     formStatus = "manual";
                     urlFileContainer.classList.add("hidden");
                     urlManualContainer.classList.remove("hidden");
-                    
-                    urlManualOption.classList.add("activeFormButton")
-                    urlFileOption.classList.remove("activeFormButton")
-
-                    displayUrl.classList.remove("hidden")
-
+                    urlManualOption.classList.add("activeFormButton");
+                    urlFileOption.classList.remove("activeFormButton");
+                    displayUrl.classList.remove("hidden");
+                    if (urlMap.size === 0) {
+                        submitForm.classList.add("hidden");
+                        clearAllUrl.classList.add("hidden");
+                    }
                 }
             });
 
-            clearAllUrl.addEventListener('click', (event)=>{
-                event.preventDefault()
-
-                    
-                submitForm.classList.add("hidden")
-                
-                if (formStatus == "manual"){
-                    urlMap.clear()
-                    displayUrl.replaceChildren()
-                    clearAllUrl.classList.add("hidden")
+            clearAllUrl.addEventListener('click', (event) => {
+                event.preventDefault();
+                submitForm.classList.add("hidden");
+                if (formStatus == "manual") {
+                    urlMap.clear();
+                    urlCount = 0;
+                    displayUrl.replaceChildren();
                     inputValue.value = "";
-                    
-                }
-                else if(formStatus == "file"){
+                } else if (formStatus == "file") {
                     fileValue.value = "";
                 }
-                
-                 
-            })
+                clearAllUrl.classList.add("hidden");
+            });
 
-            
-            function validateUrl(url) {
-                // Allow inputs like google.com
-                if (!/^https?:\/\//i.test(url)) {
-                    url = "https://" + url;
+            function parseCsvRows(text) {
+                const rows = [];
+                let row = [];
+                let field = "";
+                let inQuotes = false;
+
+                for (let i = 0; i < text.length; i += 1) {
+                    const character = text[i];
+
+                    if (inQuotes) {
+                        if (character === '"' && text[i + 1] === '"') {
+                            field += '"';
+                            i += 1;
+                        } else if (character === '"') {
+                            inQuotes = false;
+                        } else {
+                            field += character;
+                        }
+                    } else if (character === '"' && field.length === 0) {
+                        inQuotes = true;
+                    } else if (character === ',') {
+                        row.push(field);
+                        field = "";
+                    } else if (character === '\n' || character === '\r') {
+                        if (character === '\r' && text[i + 1] === '\n') {
+                            i += 1;
+                        }
+                        row.push(field);
+                        rows.push(row);
+                        row = [];
+                        field = "";
+                    } else {
+                        field += character;
+                    }
                 }
 
-                try {
-                    const parsedUrl = new URL(url);
-
-                    // Check protocol
-                    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-                        return false;
-                    }
-
-                    // Check hostname
-                    if (
-                        !parsedUrl.hostname.includes(".") ||
-                        parsedUrl.hostname.startsWith(".") ||
-                        parsedUrl.hostname.endsWith(".")
-                    ) {
-                        return false;
-                    }
-
-                    return true;
-
-                } catch {
-                    return false;
+                if (inQuotes) {
+                    throw new Error("The CSV file contains an unclosed quoted field.");
                 }
+                if (field.length > 0 || row.length > 0) {
+                    row.push(field);
+                    rows.push(row);
+                }
+                return rows;
             }
+
+            function extractCsvUrls(text) {
+                const rows = parseCsvRows(text);
+                if (rows.length < 2) {
+                    throw new Error('The CSV must contain a "urls" header and at least one URL.');
+                }
+
+                const headers = rows[0].map((header, index) =>
+                    (index === 0 ? header.replace(/^\uFEFF/, "") : header).trim().toLowerCase()
+                );
+                const urlColumn = headers.indexOf("urls");
+                if (urlColumn === -1) {
+                    throw new Error('The CSV must have a column named "urls".');
+                }
+
+                const urls = [];
+                const invalidRows = [];
+                const seen = new Set();
+
+                rows.slice(1).forEach((row, index) => {
+                    const value = (row[urlColumn] || "").trim();
+                    if (!value) return;
+
+                    const normalizedUrl = normalizeUrl(value);
+                    if (!normalizedUrl) {
+                        invalidRows.push(index + 2);
+                    } else if (!seen.has(normalizedUrl)) {
+                        seen.add(normalizedUrl);
+                        urls.push(normalizedUrl);
+                    }
+                });
+
+                if (invalidRows.length > 0) {
+                    throw new Error(`Invalid URL(s) in CSV row(s): ${invalidRows.join(", ")}.`);
+                }
+                if (urls.length === 0) {
+                    throw new Error("No URLs were found in the CSV file.");
+                }
+                return urls;
+            }
+
+            async function startScraping(urls) {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(urls)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Could not start scraping (HTTP ${response.status}).`);
+                }
+
+                const result = await response.json();
+                if (!result.job_id) {
+                    throw new Error("The server did not return a scraping job ID.");
+                }
+                window.location.href = '/loading/' + encodeURIComponent(result.job_id);
+            }
+
+            // Fixed Submission Logic
+            urlForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (formStatus === 'manual' && urlMap.size > 0) {
+                    const urlList = Array.from(urlMap.keys());
+                    try {
+                        submitForm.disabled = true;
+                        submitForm.textContent = "Loading...";
+                        await startScraping(urlList);
+                    } catch (error) {
+                        console.error(error);
+                        alert(error.message || "An error occurred while starting the scrape.");
+                    } finally {
+                        submitForm.disabled = false;
+                        submitForm.textContent = "Generate";
+                    }
+                } 
+                else if (formStatus === 'file') {
+                    const file = fileValue.files[0];
+                    if (!file) {
+                        alert("Choose a CSV file first.");
+                        return;
+                    }
+                    if (!file.name.toLowerCase().endsWith(".csv")) {
+                        alert("Please choose a .csv file. The upload expects a column named \"urls\".");
+                        return;
+                    }
+
+                    try {
+                        submitForm.disabled = true;
+                        submitForm.textContent = "Loading...";
+                        const urls = extractCsvUrls(await file.text());
+                        await startScraping(urls);
+                    } catch (error) {
+                        console.error(error);
+                        alert(error.message || "Could not read the CSV file.");
+                    } finally {
+                        submitForm.disabled = false;
+                        submitForm.textContent = "Generate";
+                    }
+                }
+            });
         </script>
     </body>
 </html>
