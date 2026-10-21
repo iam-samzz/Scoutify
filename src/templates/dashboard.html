@@ -126,6 +126,10 @@
             /* Syntax: horizontal vertical blur spread color */
                 box-shadow: 1px 1px 10px 1px #586578;
             }
+
+            #addr_status{
+                margin-bottom: 20px;
+            }
         </style>
     </head>
     <body>
@@ -134,7 +138,10 @@
             <h2>Give URLs as Input</h2>
             <section>
                 <form action="#" method="post" id="url-form">
-                    
+                    <p>Scraping address takes some long time, since its using Local AI Model from your Computer.</p>
+                    <label for="addr_status">Scrape Address also: </label>
+                    <input type="checkbox" id="addr_status" name="addr_choice" value="true">
+
                     <div id="url-options">
                         <button class="btn" type="button" id="manual-url-option">Manual</button>
                         <button class="btn" type="button" id="url-file-option">Upload</button>
@@ -178,6 +185,26 @@
             const fileValue = document.getElementById("url-file");
             const urlAddButton = document.getElementById("add-url");
             const urlMap = new Map();
+
+            // by default setting address status to false
+            urlMap.set("addr_status",false)
+
+             // ----------
+            let addr_choice = document.getElementById("addr_status")
+            addr_choice.checked = false;
+            addr_choice.addEventListener('change' ,(e)=>{
+                
+                if(e.target.checked){
+                    urlMap.set("addr_status", true)
+                }
+                else{  
+                    urlMap.set("addr_status" , false)
+                }
+
+            })
+            
+            // ----------
+
             const submitForm = document.getElementById("submit-btn");
             const urlFileOption = document.getElementById("url-file-option");
             const urlManualOption = document.getElementById("manual-url-option");
@@ -194,6 +221,7 @@
             submitForm.classList.add("hidden");
             clearAllUrl.classList.add("hidden");
             urlManualOption.classList.add("activeFormButton");
+
 
             function normalizeUrl(url) {
                 if (!/^https?:\/\//i.test(url)) {
@@ -366,6 +394,8 @@
                     row.push(field);
                     rows.push(row);
                 }
+
+                //returns a list of urls
                 return rows;
             }
 
@@ -409,11 +439,11 @@
                 return urls;
             }
 
-            async function startScraping(urls) {
+            async function startScraping(urlMapObj) {
                 const response = await fetch('/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(urls)
+                    body: JSON.stringify(urlMapObj)
                 });
 
                 if (!response.ok) {
@@ -432,11 +462,14 @@
                 e.preventDefault();
                 
                 if (formStatus === 'manual' && urlMap.size > 0) {
-                    const urlList = Array.from(urlMap.keys());
+                    //covering map to list
+
+                    const urlMapJson = Object.fromEntries(urlMap)
+
                     try {
                         submitForm.disabled = true;
                         submitForm.textContent = "Loading...";
-                        await startScraping(urlList);
+                        await startScraping(urlMapJson);
                     } catch (error) {
                         console.error(error);
                         alert(error.message || "An error occurred while starting the scrape.");
@@ -460,7 +493,14 @@
                         submitForm.disabled = true;
                         submitForm.textContent = "Loading...";
                         const urls = extractCsvUrls(await file.text());
-                        await startScraping(urls);
+
+                        urls.forEach((url, index) => {
+                            urlMap.set(url, index + 1);
+                        });
+                        
+                        const urlMapJson = Object.fromEntries(urlMap)
+
+                        await startScraping(urlMapJson);
                     } catch (error) {
                         console.error(error);
                         alert(error.message || "Could not read the CSV file.");

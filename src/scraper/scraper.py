@@ -8,7 +8,7 @@ from src.scraper.url_details import UrlDetails
 
 class Scraper:
 
-    def __init__(self,urls:list,addr_status=True):
+    def __init__(self,urls:list,addr_status:bool):
         self.urls = urls
         self.total_urls = len(urls)
 

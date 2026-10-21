@@ -231,17 +231,27 @@
             }
 
             .muted { color: #8b949e; }
+
+            #goHome{
+                display: inline-block;
+            }
         </style>
     </head>
     <body>
+        <header>
+            <nav>
+                <button class="btn2" type="button" id="goHome">Home</button>
+            </nav>
+        </header>
         <main>
+            
             <h1>Contact Details</h1>
 
             <div class="toolbar">
                 <p class="result-count">
                     {{ urls|length }} result{{ '' if urls|length == 1 else 's' }}
                 </p>
-                <a class="btn simple-glow" id="export-btn" href="/export">Export</a>
+                <a class="btn simple-glow" id="export-btn" >Export</a>
             </div>
 
             {% if urls %}
@@ -322,6 +332,8 @@
         </div>
 
         <script>
+            const jobId = {{ job_id|tojson }};
+
             (function () {
                 const overlay    = document.getElementById('modal-overlay');
                 const modalTitle = document.getElementById('modal-title');
@@ -379,6 +391,46 @@
                     }
                 });
             })();
+
+
+            const goHome = document.getElementById("goHome")
+            goHome.addEventListener("click" , (e) =>{
+                e.preventDefault()
+                window.location.href = '/'
+            })
+
+
+            const exportResult = document.getElementById("export-btn")
+            const exportUrl = `/export/${jobId}`;
+
+
+            exportResult.addEventListener('click' , async ()=>{                
+                
+                console.log("jobId:", jobId);
+                console.log("exportUrl:", exportUrl);
+                const response = await fetch(exportUrl)
+                if (!response.ok){
+
+                    throw new Error(`Server error ${response.status}`)
+                }
+
+                const data  = await response.blob()
+
+                const url = URL.createObjectURL(data)
+
+                const a = document.createElement("a");
+
+                a.href = url;
+                a.download = `report_${jobId}.csv`
+
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                setTimeout(()=>{
+                    URL.revokeObjectURL(url)
+                },2000)
+            })
         </script>
     </body>
 </html>

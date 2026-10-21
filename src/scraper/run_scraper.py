@@ -18,7 +18,9 @@ when we call this func using multi threading, the endpoint must have
 
 JOBS = {}
 
-def scraper_worker_func(job_id: str, urls: list, addr_status: bool = False) -> None:
+def scraper_worker_func(job_id: str, urls: list, addr_status: bool) -> None:
+
+    print(addr_status , "-----------> this is address status",flush=True)
     try:
         
         print(f"job {job_id} is created.",flush=True)

@@ -21,24 +21,24 @@ def generate():
     #SEND IT TO LOADING PAGE BY LAODING IT.
 
     #getting data from frontend
+
+    # dict
     urls = request.get_json()
 
     if not urls:
         return jsonify({"error":"Missing URLS json body"}), 400
 
+    addr_status = False
+
     # address status validation
     if "addr_status" in urls:
-        addr_status = urls.get("addr_status")
-        if addr_status:
-            del urls["addr_status"]
-        else:
-            addr_status = False
-            del urls["addr_status"]        
-    else:
-        addr_status = False
+        print(urls["addr_status"] , "--------> this is addresss status")
 
-
+        addr_status = urls["addr_status"]
+        del urls["addr_status"]
+    
     url_list = list(urls)
+    
     #assigning job id
     job_id = str(uuid.uuid4())
 
